@@ -2,6 +2,7 @@ package com.example.mywordle
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -15,12 +16,15 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import java.util.stream.Collectors
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,8 +32,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var etGuess: EditText
     lateinit var adapter: WordleAdapter
 
-    val possibleAnswers: MutableList<String> = mutableListOf("audio", "trace", "pitch")
-    val allowedWords: MutableList<String> = mutableListOf("weird", "right", "really")
+    val possibleAnswers: MutableList<String> = mutableListOf()
+    val allowedWords: MutableList<String> = mutableListOf()
     lateinit var answer: String
     var currentGuess = ""
     val guesses: MutableList<String> = mutableListOf()
@@ -39,11 +43,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val appDir = applicationInfo.dataDir
-//        val appDir = filesDir
-//        val x = File(appDir).list()
-        possibleAnswers.addAll(readFileIntoList("$appDir/word_lists/possible_answers.txt"))
-        allowedWords.addAll(readFileIntoList("$appDir/word_lists/allowed_guesses.txt"))
+        possibleAnswers.addAll(readFileIntoList("possible_answers.txt"))
+        allowedWords.addAll(readFileIntoList("allowed_guesses.txt"))
         allowedWords.addAll(possibleAnswers)
         for (i in 0 until 6) {
             guesses.add("")
@@ -128,7 +129,8 @@ class MainActivity : AppCompatActivity() {
     fun readFileIntoList(file: String): MutableList<String> {
         var lines = mutableListOf<String>()
         try {
-            lines = Files.readAllLines(Paths.get(file), StandardCharsets.UTF_8)
+            lines = BufferedReader(InputStreamReader(assets.open(file), StandardCharsets.UTF_8))
+                .lines().collect(Collectors.toList())
         } catch (e: IOException) {
             Log.e(TAG, "Could not read file into a list")
             e.printStackTrace()
