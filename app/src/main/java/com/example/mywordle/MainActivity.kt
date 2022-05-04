@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     var currentGuess = ""
     val guesses: MutableList<String> = mutableListOf()
     var currentPosition = 0
+    var gameOver = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,21 +61,23 @@ class MainActivity : AppCompatActivity() {
 
         etGuess.addTextChangedListener(object: TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-                Log.i(TAG, "beforeTextChanged")
+//                Log.i(TAG, "beforeTextChanged")
             }
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                Log.i(TAG, "onTextChanged")
-                if (s.length > 5) {
-                    etGuess.setText(s.substring(0, 5))
+                if (!gameOver) {
+//                    Log.i(TAG, "onTextChanged")
+                    if (s.length > 5) {
+                        etGuess.setText(s.substring(0, 5))
+                    }
+                    currentGuess = s.toString()
+                    guesses[currentPosition] = currentGuess
+                    adapter.notifyItemChanged(currentPosition)
                 }
-                currentGuess = s.toString()
-                guesses[currentPosition] = currentGuess
-                adapter.notifyItemChanged(currentPosition)
             }
 
             override fun afterTextChanged(s: Editable) {
-                Log.i(TAG, "afterTextChanged")
+//                Log.i(TAG, "afterTextChanged")
             }
 
         })
@@ -85,45 +88,54 @@ class MainActivity : AppCompatActivity() {
     private lateinit var popupWindow: PopupWindow
 
     fun submitAction(view: View) {
-        if (currentGuess.length == 5) {
-            if (!allowedWords.contains(currentGuess)) {
-                Toast.makeText(this, "Not in word list", Toast.LENGTH_SHORT).show()
-            } else {
-                popupView = LayoutInflater.from(this).inflate(R.layout.popup_result, null)
-                popupTV = popupView.findViewById(R.id.tvResult)
-                val width = ConstraintLayout.LayoutParams.MATCH_PARENT
-                val height = ConstraintLayout.LayoutParams.WRAP_CONTENT
-                val focusable = true
-                popupWindow = PopupWindow(popupView, width, height, focusable)
-
-                val viewHolder: WordleAdapter.ViewHolder = rvGuesses.findViewHolderForAdapterPosition(currentPosition)
-                        as WordleAdapter.ViewHolder
-                viewHolder.check(currentGuess)
-                if (currentGuess == answer) {
-                    popupTV.text = String.format("You won in %s turns!", currentPosition + 1)
-                    popupWindow.showAtLocation(rvGuesses, Gravity.CENTER, 0, 0)
-                } else if (currentPosition == 5) {
-                    popupTV.text = "You lost"
-                    popupWindow.showAtLocation(rvGuesses, Gravity.CENTER, 0, 0)
+        if (!gameOver) {
+            if (currentGuess.length == 5) {
+                if (!allowedWords.contains(currentGuess)) {
+                    Toast.makeText(this, "Not in word list", Toast.LENGTH_SHORT).show()
                 } else {
-                    currentPosition++
-                    currentGuess = ""
-                    etGuess.text.clear()
+                    popupView = LayoutInflater.from(this).inflate(R.layout.popup_result, null)
+                    popupTV = popupView.findViewById(R.id.tvResult)
+                    val width = ConstraintLayout.LayoutParams.MATCH_PARENT
+                    val height = ConstraintLayout.LayoutParams.WRAP_CONTENT
+                    val focusable = true
+                    popupWindow = PopupWindow(popupView, width, height, focusable)
+
+                    val viewHolder: WordleAdapter.ViewHolder =
+                        rvGuesses.findViewHolderForAdapterPosition(currentPosition)
+                                as WordleAdapter.ViewHolder
+                    viewHolder.check(currentGuess)
+                    if (currentGuess == answer) {
+                        gameOver = true
+                        popupTV.text = String.format("You won in %s turns!", currentPosition + 1)
+                        popupWindow.showAtLocation(rvGuesses, Gravity.CENTER, 0, 0)
+                    } else if (currentPosition == 5) {
+                        popupTV.text = "You lost"
+                        popupWindow.showAtLocation(rvGuesses, Gravity.CENTER, 0, 0)
+                    } else {
+                        currentPosition++
+                        currentGuess = ""
+                        etGuess.text.clear()
+                    }
                 }
             }
+        } else {
+            Toast.makeText(this, "Please start a new game", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun restartAction(view: View) {
         answer = possibleAnswers.random()
+        Log.i(TAG, "Answer: $answer")
         currentGuess = ""
         currentPosition = 0
+        guesses.clear()
         for (i in 0 until 6) {
-            guesses[i] = ("")
+            guesses.add("")
         }
-        adapter.currentPosition = 0
-        adapter.notifyDataSetChanged()
+        adapter = WordleAdapter(this, answer, guesses)
+        rvGuesses.adapter = adapter
         etGuess.text.clear()
+        gameOver = false
     }
 
     fun readFileIntoList(file: String): MutableList<String> {
