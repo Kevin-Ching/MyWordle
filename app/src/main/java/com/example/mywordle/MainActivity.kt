@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     fun submitAction(view: View) {
         if (!gameOver) {
             if (currentGuess.length == 5) {
+                currentGuess = currentGuess.lowercase()
                 if (!allowedWords.contains(currentGuess)) {
                     Toast.makeText(this, "Not in word list", Toast.LENGTH_SHORT).show()
                 } else {

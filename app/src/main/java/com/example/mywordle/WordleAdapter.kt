@@ -47,10 +47,10 @@ class WordleAdapter(val context: Context, val answer: String, val guesses: Mutab
         val letters: MutableList<TextView> = mutableListOf(letter1, letter2, letter3, letter4, letter5)
 
         fun bind(guess: String) {
-            val black = context.resources.getColor(R.color.black)
+//            val black = context.resources.getColor(R.color.black)
             for (tv in letters) {
                 tv.setBackgroundResource(R.drawable.border)
-                tv.setTextColor(black)
+//                tv.setTextColor(black)
                 tv.text = ""
             }
             for (i in 0 until min(5, guess.length)) {
